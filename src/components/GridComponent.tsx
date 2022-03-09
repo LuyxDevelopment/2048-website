@@ -1,27 +1,80 @@
 import { Game } from '../game/game';
 import React from 'react';
-import Square from './Square';
 import { handleGame } from 'game/handleGame';
 
-export default class GridComponent<P extends { game: Game }> extends React.Component<P, { gameOver: string, moves: number, score: number, squares: number[] }> {
-	constructor(props: P) {
+export default class GridComponent extends React.Component<Record<string, unknown>, { gameOver: string, moves: number, score: number, squares: number[] }> {
+	public gridCanvas: React.RefObject<HTMLCanvasElement>;
+	public readonly game: Game;
+
+	constructor(props: Record<string, unknown>) {
 		super(props);
+
+		this.game = new Game();
 		this.state = {
 			gameOver: '',
-			moves: 0,
-			score: 0,
-			squares: this.props.game.grid
+			moves: this.game.moves,
+			score: this.game.score,
+			squares: this.game.grid
 		};
+
+		this.gridCanvas = React.createRef();
+
+		this.restart = this.restart.bind(this);
+	}
+
+	private getImageCoords(index: number): [number, number] {
+		const x = index % 4;
+		const y = Math.floor(index / 4) % 4;
+
+		return [x * (100 + 15) + 15, y * (100 + 15) + 15];
+	}
+
+	private roundedImage(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number): void {
+		ctx.beginPath();
+		ctx.moveTo(x + radius, y);
+		ctx.lineTo(x + width - radius, y);
+		ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+		ctx.lineTo(x + width, y + height - radius);
+		ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+		ctx.lineTo(x + radius, y + height);
+		ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+		ctx.lineTo(x, y + radius);
+		ctx.quadraticCurveTo(x, y, x + radius, y);
+		ctx.closePath();
+	}
+
+	private draw(): void {
+		const ctx = this.gridCanvas.current!.getContext('2d')!;
+
+		for (let i = 0; i < 16; i++) {
+			const image = new Image(100, 100);
+
+			image.onload = (): void => {
+				ctx.save();
+				this.roundedImage(ctx, ...this.getImageCoords(i), 100, 100, 10);
+				ctx.clip();
+				ctx.drawImage(image, ...this.getImageCoords(i), 100, 100);
+				ctx.restore();
+			};
+
+			image.src = `images/${this.state.squares[i]}.png`;
+		}
 	}
 
 	public componentDidMount(): void {
-		document.addEventListener('keydown', (key) => {
-			handleGame(key, this);
-		});
-	}
+		const ctx = this.gridCanvas.current!.getContext('2d')!;
 
-	public renderSquare(i: number): JSX.Element {
-		return (<Square value={this.state.squares[i]!} />);
+		ctx.fillStyle = '#757575';
+		ctx.fillRect(0, 0, 480, 480);
+
+		this.draw();
+
+		document.addEventListener('keydown', (key) => {
+
+			handleGame(key, this);
+
+			this.draw();
+		});
 	}
 
 	public endGame(): void {
@@ -29,49 +82,36 @@ export default class GridComponent<P extends { game: Game }> extends React.Compo
 	}
 
 	public updateGrid(): void {
-		const squares = this.props.game.grid.slice();
+		const squares = this.game.grid.slice();
 
 		for (let i = 0; i < 15; i++) {
-			squares[i] = this.props.game.grid[i]!;
+			squares[i] = this.game.grid[i]!;
 		}
 
 		this.setState({ squares });
 	}
 
+	private restart(): void {
+		this.game.regenerate();
+
+		this.setState({ gameOver: '', moves: 0, score: 0, squares: this.game.grid }, () => {
+			this.draw();
+		});
+	}
+
 	public render(): React.ReactNode {
 		return (
 			<div>
-				<div className='header'>
-					<h1>Welcome to 2048</h1>
+				<div>
+					<h1>
+						Welcome to 2048
+					</h1>
 					<h2>{this.state.gameOver}</h2>
 					<p>Score: {this.state.score} - Moves: {this.state.moves}</p>
+					<input className='new-game' type='button' value='New Game' onClick={this.restart}></input>
 				</div>
-
 				<div className='grid'>
-					<div className='grid-row'>
-						{this.renderSquare(0)}
-						{this.renderSquare(1)}
-						{this.renderSquare(2)}
-						{this.renderSquare(3)}
-					</div>
-					<div className='grid-row'>
-						{this.renderSquare(4)}
-						{this.renderSquare(5)}
-						{this.renderSquare(6)}
-						{this.renderSquare(7)}
-					</div>
-					<div className='grid-row'>
-						{this.renderSquare(8)}
-						{this.renderSquare(9)}
-						{this.renderSquare(10)}
-						{this.renderSquare(11)}
-					</div>
-					<div className='grid-row'>
-						{this.renderSquare(12)}
-						{this.renderSquare(13)}
-						{this.renderSquare(14)}
-						{this.renderSquare(15)}
-					</div>
+					<canvas ref={this.gridCanvas} width='475' height='475' />
 				</div>
 			</div>
 		);

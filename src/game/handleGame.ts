@@ -1,9 +1,8 @@
 import GridComponent from 'components/GridComponent.js';
 import { UP_INDEXES, DOWN_INDEXES, LEFT_INDEXES, RIGHT_INDEXES } from './constants';
-import { Game } from './game';
 
-export function handleGame(key: KeyboardEvent, component: GridComponent<{ game: Game }>): void {
-	const { game } = component.props;
+export function handleGame(key: KeyboardEvent, component: GridComponent): void {
+	const { game } = component;
 
 	switch (key.code) {
 		case 'ArrowUp': {

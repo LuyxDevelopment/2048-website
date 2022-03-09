@@ -52,6 +52,8 @@ export class Game {
 	}
 
 	public regenerate(): void {
+		this.moves = 0;
+		this._score = 0;
 		this._grid = this.generate();
 	}
 
@@ -114,10 +116,6 @@ export class Game {
 		this.set(x, y, 0);
 
 		return true;
-	}
-
-	public remove(x: number, y: number): void {
-		this.set(x, y, 0);
 	}
 
 	public castRay(x: number, y: number, dx: 1 | 0 | -1, dy: 1 | 0 | -1): { value: number, x: number, y: number } {
