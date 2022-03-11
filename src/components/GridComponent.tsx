@@ -1,9 +1,12 @@
 import { Game } from '../game/game';
-import React from 'react';
+import React, { Component, createRef, ReactNode, RefObject } from 'react';
 import { handleGame } from 'game/handleGame';
+import ms from 'pretty-ms';
 
-export default class GridComponent extends React.Component<Record<string, unknown>, { gameOver: string, moves: number, score: number, squares: number[] }> {
-	public gridCanvas: React.RefObject<HTMLCanvasElement>;
+export default class GridComponent extends Component<Record<string, unknown>, { gameOver: string, moves: number, score: number, squares: number[], time: number }> {
+	public gridCanvas: RefObject<HTMLCanvasElement>;
+	public timer: RefObject<HTMLElement>;
+	public timerID?: NodeJS.Timer;
 	public readonly game: Game;
 
 	constructor(props: Record<string, unknown>) {
@@ -14,19 +17,21 @@ export default class GridComponent extends React.Component<Record<string, unknow
 			gameOver: '',
 			moves: this.game.moves,
 			score: this.game.score,
-			squares: this.game.grid
+			squares: this.game.grid,
+			time: 0
 		};
 
-		this.gridCanvas = React.createRef();
+		this.gridCanvas = createRef();
+		this.timer = createRef();
 
 		this.restart = this.restart.bind(this);
 	}
 
 	private getImageCoords(index: number): [number, number] {
-		const x = index % 4;
-		const y = Math.floor(index / 4) % 4;
-
-		return [x * (100 + 15) + 15, y * (100 + 15) + 15];
+		return [
+			(index % 4) * (100 + 15) + 15,
+			(Math.floor(index / 4) % 4) * (100 + 15) + 15
+		];
 	}
 
 	private roundedImage(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number): void {
@@ -61,6 +66,12 @@ export default class GridComponent extends React.Component<Record<string, unknow
 		}
 	}
 
+	public componentWillUnmount(): void {
+		clearInterval(this.timerID!);
+		this.timerID = undefined;
+	}
+
+
 	public componentDidMount(): void {
 		const ctx = this.gridCanvas.current!.getContext('2d')!;
 
@@ -71,6 +82,14 @@ export default class GridComponent extends React.Component<Record<string, unknow
 
 		document.addEventListener('keydown', (key) => {
 
+			if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key.code)) return;
+
+			if (!this.game.moves && !this.timerID && !this.game.over) {
+				this.timerID = setInterval(() => {
+					this.setState({ time: (this.state.time + 1) });
+				}, 100);
+			}
+
 			handleGame(key, this);
 
 			this.draw();
@@ -78,7 +97,11 @@ export default class GridComponent extends React.Component<Record<string, unknow
 	}
 
 	public endGame(): void {
+		clearInterval(this.timerID!);
+		this.timerID = undefined;
+
 		this.setState({ gameOver: 'Game Over!' });
+		this.game.restart();
 	}
 
 	public updateGrid(): void {
@@ -92,14 +115,18 @@ export default class GridComponent extends React.Component<Record<string, unknow
 	}
 
 	private restart(): void {
-		this.game.regenerate();
+		this.game.restart();
+		this.game.over = false;
 
-		this.setState({ gameOver: '', moves: 0, score: 0, squares: this.game.grid }, () => {
+		this.setState({ gameOver: '', moves: 0, score: 0, squares: this.game.grid, time: 0 }, () => {
 			this.draw();
 		});
+
+		clearInterval(this.timerID!);
+		this.timerID = undefined;
 	}
 
-	public render(): React.ReactNode {
+	public render(): ReactNode {
 		return (
 			<div>
 				<div>
@@ -107,7 +134,7 @@ export default class GridComponent extends React.Component<Record<string, unknow
 						Welcome to 2048
 					</h1>
 					<h2>{this.state.gameOver}</h2>
-					<p>Score: {this.state.score} - Moves: {this.state.moves}</p>
+					<p className='details'>Score: {this.state.score} - Moves: {this.state.moves} - Time: {ms(this.state.time * 100)}</p>
 					<input className='new-game' type='button' value='New Game' onClick={this.restart}></input>
 				</div>
 				<div className='grid'>

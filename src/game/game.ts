@@ -20,7 +20,7 @@ export class Game {
 
 
 		if (grid === undefined) {
-			this._grid = this.generate();
+			this._grid = this.generateGrid();
 		} else {
 			this._grid = grid;
 		}
@@ -34,7 +34,7 @@ export class Game {
 		return this._score;
 	}
 
-	private generate(): number[] {
+	private generateGrid(): number[] {
 		const grid = new Array<number>(16).fill(0);
 
 		for (let i = 0; i < 2; i++) {
@@ -51,10 +51,10 @@ export class Game {
 		return grid;
 	}
 
-	public regenerate(): void {
+	public restart(): void {
 		this.moves = 0;
 		this._score = 0;
-		this._grid = this.generate();
+		this._grid = this.generateGrid();
 	}
 
 	public at(x: number, y: number): number {

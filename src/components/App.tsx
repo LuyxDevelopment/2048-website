@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { Component, ReactNode } from 'react';
 import Footer from './Footer';
 import GridComponent from './GridComponent';
 
-export default class App extends React.Component {
-	render(): React.ReactNode {
+export default class App extends Component {
+	render(): ReactNode {
 		return (
 			<div>
 				<GridComponent />
