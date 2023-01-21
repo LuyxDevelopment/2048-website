@@ -1,8 +1,0 @@
-{
-	"short_name": "2048 - Luyx Development",
-	"name": "2048 Bot - Luyx Development",
-	"start_url": ".",
-	"display": "standalone",
-	"theme_color": "#000000",
-	"background_color": "#ffffff"
-}
