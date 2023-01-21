@@ -1,9 +1,10 @@
-import { Game } from '../game/game';
-import React, { Component, createRef, ReactNode, RefObject } from 'react';
 import { handleGame } from 'game/handleGame';
 import ms from 'pretty-ms';
+import React, { Component, createRef, ReactNode, RefObject } from 'react';
 
-export default class GridComponent extends Component<Record<string, unknown>, { gameOver: string, moves: number, score: number, squares: number[], time: number }> {
+import { Game } from '../game/game';
+
+export default class GridComponent extends Component<Record<string, unknown>, { gameOver: string, moves: number, score: number, squares: number[], time: number; }> {
 	public gridCanvas: RefObject<HTMLCanvasElement>;
 	public timer: RefObject<HTMLElement>;
 	public timerID?: NodeJS.Timer;

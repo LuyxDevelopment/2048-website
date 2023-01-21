@@ -1,6 +1,6 @@
 @font-face {
   font-family: Titles;
-  src: url(./assets/fonts/font.ttf);
+  src: url(../public/assets/fonts/font.ttf);
 }
 
 a {
